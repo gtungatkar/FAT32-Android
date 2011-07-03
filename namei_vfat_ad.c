@@ -31,6 +31,8 @@
 //#include <linux/audit.h>
 #include "fat.h"
 #define ACC_MODE(x) ("\000\004\002\006"[(x)&O_ACCMODE])
+
+//@Gaurav Tungatkar
 static int vfat_android_getattr(struct vfsmount *mnt, struct dentry *dentry, struct kstat *k);
 static int vfat_android_setattr(struct dentry *dentry, struct iattr *attr);
 static const struct inode_operations vfat_file_inode_operations = {
@@ -44,6 +46,7 @@ struct permission_entry {
 	uid_t uid;
 	gid_t gid;
 };
+//--@Gaurav Tungatkar
 
 /*
  * If new entry was created in the parent, it could create the 8.3
@@ -722,27 +725,18 @@ static int vfat_find(struct inode *dir, struct qstr *qname,
 		return -ENOENT;
 	return fat_search_long(dir, qname->name, len, sinfo);
 }
+//@Gaurav Tungatkar
 static int get_permission_entry(struct file *filp, struct permission_entry *entry)
 {
-	//int i = 0;
-//	char c[2];
 	if(IS_ERR(filp) || filp == NULL ||filp->f_op->read == NULL )
 	{
 		printk("FAIL: Could not open .permissions\n");
 		return 0;
 	}
-	//printk("in GET PERMISSIONS ENTRY getline\n");
         return filp->f_op->read(filp, (void *)entry, sizeof(struct permission_entry), &filp->f_pos);
 }
 static int set_mode(struct file *filp, unsigned const char *filename, mode_t mode, uid_t uid, gid_t gid)
 {
-	//char buffer[256] = "";
-	//char str[50];
-	//u32 modebuf;
-	//u32 uidb;
-	//u32 gidb;
-	//char *f = NULL,*u=NULL;
-	//	char c;
 	struct permission_entry entry;
 	int len = sizeof(struct permission_entry);
 	while(get_permission_entry(filp, &entry) > 0)
@@ -766,18 +760,11 @@ static int set_mode(struct file *filp, unsigned const char *filename, mode_t mod
 static int get_file_entry(struct file *filp, unsigned const char *filename, 
 mode_t *mode, uid_t *uid, gid_t *gid)
 {
-//	char buffer[256] = "";
-//	char *f = NULL;
-//	char modebuf[20], uidbuf[20], gidbuf[20];
-//	int i = 0;
 	struct permission_entry entry;
-//	int mode, uid, gid;
 	while(get_permission_entry(filp, &entry) > 0)
 	{
 		//printk("get_mode:entry filename = %s; filename = %s\n", entry.filename, filename);
-		//f = strstr(buffer, filename);
 		if(strcmp(entry.filename, filename) == 0)
-		//if(f != NULL)
 		{
 			*mode = entry.mode;
 			*uid = entry.uid;
@@ -846,37 +833,23 @@ static struct dentry *vfat_lookup(struct inode *dir, struct dentry *dentry,
 	{
 		printk("Inode for this file is immutable\n");
 	}
-//	printk("saved names:::: %s\n", nd->saved_names[0]);
 	if(strstr(dentry->d_name.name, ".permissions") == NULL)
 	{
 		oldfs = get_fs();
 		set_fs(KERNEL_DS);
 		get_filepath(dentry, filepath);	
-		//printk("BEFORE FILE OPEN path = %s\n", filepath);
 	        mutex_unlock(&(dentry->d_parent->d_inode->i_mutex));		
 		filp = filp_open(filepath, O_RDONLY|O_CREAT, 00);
 	        mutex_lock(&(dentry->d_parent->d_inode->i_mutex));		
-//		filp = my_do_filp_open(nd, 00, O_RDONLY); 
-		//printk("trying to open file\n");
 		if(!(IS_ERR(filp) || filp == NULL ||filp->f_op->read == NULL ))
 		{
-			//old_fs = get_fs();
-		//	set_fs(KERNEL_DS);
 			printk("dentry: %s\n", dentry->d_name.name);
-			//mode = get_mode(filp, dentry->d_name.name);
 			ret = get_file_entry(filp, dentry->d_name.name, &mode, &uid, &gid);
-		//	uid = get_uid(filp, dentry->d_name.name);
-		//	gid = get_gid(filp, dentry->d_name.name);
-			//set_mode(filp, dentry->d_name.name, 0777);
-			//printk("AFTER MODE\n");
 			if(mode == 0)
 			{	
 				printk("Default mode: %s\n", dentry->d_name.name);
 				mode = 0644;
 			}
-			//rc = get_line(filp, buff);
-		//	printk("rc = %d..buff = %s...\n",rc, buff);
-			//set_fs(old_fs);
 			fput(filp);
 		}
 		else
@@ -1260,7 +1233,6 @@ error_inode:
 
 static int vfat_android_getattr(struct vfsmount *mnt, struct dentry *dentry, struct kstat *k)
 {
-//	printk("GETATTR called dentry = %s\n", dentry->d_name.name);
 	return fat_getattr(mnt, dentry, k);
 }
 static int vfat_android_setattr(struct dentry *dentry, struct iattr *attr)
@@ -1271,11 +1243,8 @@ static int vfat_android_setattr(struct dentry *dentry, struct iattr *attr)
 	uid_t uid = inode->i_uid;
 	uid_t gid = inode->i_gid;
 	mode_t mode = inode->i_mode;
-//	uid_t uid=attr->ia_uid;
-//	gid_t gid=attr->ia_gid;
 	mm_segment_t oldfs;
 	char filepath[100] = "";
-//	printk("INSIDER SETATTR dentry = %s\n", dentry->d_name.name);
 	if(attr->ia_valid & ATTR_MODE)
 	{
 		setmode = 1;
@@ -1291,7 +1260,6 @@ static int vfat_android_setattr(struct dentry *dentry, struct iattr *attr)
 		setgid = 1;
 		gid = attr->ia_gid;
 	}
-//	error = fat_setattr(dentry, attr);
 	error = inode_change_ok(inode, attr);
 	if(error == -EPERM)
 		return error;
@@ -1310,7 +1278,6 @@ static int vfat_android_setattr(struct dentry *dentry, struct iattr *attr)
 		attr->ia_valid = attr->ia_valid | ATTR_GID;
 		attr->ia_mode = attr->ia_gid | gid;
 	}
-//	printk("HAS MODE CHANGED BEFORE %o\n", dentry->d_inode->i_mode);
 	error = inode_setattr(dentry->d_inode, attr);
 	if(error == -EPERM)
 		return error;
@@ -1320,17 +1287,12 @@ static int vfat_android_setattr(struct dentry *dentry, struct iattr *attr)
 		oldfs = get_fs();
 		set_fs(KERNEL_DS);
 		get_filepath(dentry, filepath);	
-	//	printk("BEFORE FILE OPEN path = %s\n", filepath);
 	        mutex_unlock(&(dentry->d_parent->d_inode->i_mutex));		
 		filp = filp_open(filepath, O_RDONLY, 00);
 	        mutex_lock(&(dentry->d_parent->d_inode->i_mutex));		
-	//	printk("trying to open file\n");
 		if(!(IS_ERR(filp) || filp == NULL ||filp->f_op->read == NULL ))
 		{
-	//		printk("SETMD FILPP %s\n", dentry->d_name.name);
 			set_mode(filp, dentry->d_name.name, mode, uid, gid);
-			//set_mode(filp, dentry->d_name.name, 0777);
-			
 			fput(filp);
 		}
 		else
@@ -1338,7 +1300,6 @@ static int vfat_android_setattr(struct dentry *dentry, struct iattr *attr)
 		set_fs(oldfs);
 		
 	}
-	printk("HAS MODE CHANGED %o\n", dentry->d_inode->i_mode);
 	return error;
 }
 static const struct inode_operations vfat_dir_inode_operations = {
