@@ -1,0 +1,24 @@
+*********FAT32 modifications for Android***********
+***************************************************
+
+Author: Gaurav Tungatkar, Nikhil Talpalikar
+
+Description: 
+Modifications to the vfat driver in the Linux kernel module to add a permissions
+layer to FAT32. This project tries to implement unix style permissions on top of
+FAT32.
+
+Rationale: 
+Android based smartphones increasingly use FAT32 formatted SD cards for storing
+all sorts of data. With virtually no protection provided by FAT32, this opens up
+security holes for data corruption. Adding unix style permissions is useful here
+because in Android, every application gets a different user id. Each application
+can be thought of as a user and unix style user-group-world permissions can help
+enforce separation between applications.
+
+Design:
+Each folder has a hidden ".permissions" file which stores the mode and uid, gid
+information for each file in that folder. Hacks in file open, to read this
+special file and file in the permissions. chmod, chown supported, making changes
+to entries in the ".permissions" file.
+See demo video.

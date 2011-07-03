@@ -1,0 +1,4 @@
+dd if=/dev/zero of=linux.vfat bs=1024 count=1024
+mkfs -t vfat linux.vfat
+mount linux.vfat /mnt -o loop=/dev/loop0
+insmod /lib/modules/2.6.32-24-generic/kernel/fs/fat/fat.ko

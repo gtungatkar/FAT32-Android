@@ -1,0 +1,1 @@
+cmd_/home/gaurav/Dropbox/Code/storage/namei_vfat_ad.ko := ld -r -m elf_i386 -T /usr/src/linux-headers-2.6.32-24-generic/scripts/module-common.lds --build-id -o /home/gaurav/Dropbox/Code/storage/namei_vfat_ad.ko /home/gaurav/Dropbox/Code/storage/namei_vfat_ad.o /home/gaurav/Dropbox/Code/storage/namei_vfat_ad.mod.o
